@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/router';
 
 const AdminDashboard = () => {
@@ -10,6 +10,19 @@ const AdminDashboard = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [stats, setStats] = useState({});
   const [actionLoading, setActionLoading] = useState({});
+  
+  // Enhanced state for new features
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({
+    status: 'all',
+    apiAccess: 'all',
+    dateRange: 'all'
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
 
   // Check admin authentication
   useEffect(() => {
@@ -36,8 +49,31 @@ const AdminDashboard = () => {
     checkAdminAuth();
   }, []);
 
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (autoRefresh) {
+      const interval = setInterval(() => {
+        loadDashboardData(false); // Silent refresh
+        setLastRefresh(new Date());
+      }, 30000); // Refresh every 30 seconds
+      
+      setRefreshInterval(interval);
+      return () => clearInterval(interval);
+    } else if (refreshInterval) {
+      clearInterval(refreshInterval);
+      setRefreshInterval(null);
+    }
+  }, [autoRefresh]);
+
+  // Reset page when tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery, filters]);
+
   // Load dashboard data
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    
     try {
       await Promise.all([
         loadPendingUsers(),
@@ -46,6 +82,8 @@ const AdminDashboard = () => {
       ]);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+    } finally {
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -63,28 +101,39 @@ const AdminDashboard = () => {
     });
   };
 
-  // Load pending users
+  // Load pending users with pagination
   const loadPendingUsers = async () => {
     try {
-      const response = await authenticatedFetch('https://aboki-b2b-eobk.onrender.com/api/v1/admin/users/pending-verification');
+      const response = await authenticatedFetch(
+        `https://aboki-b2b-eobk.onrender.com/api/v1/admin/users/pending-verification`
+      );
       
       if (response.ok) {
         const result = await response.json();
-        setPendingUsers(result.data || []);
+        console.log('Pending users API response:', result); // Debug log
+        setPendingUsers(Array.isArray(result.data) ? result.data : []);
+      } else {
+        console.error('Pending users API error:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Failed to load pending users:', error);
     }
   };
 
-  // Load all users
+  // Load all users with enhanced filtering
   const loadAllUsers = async () => {
     try {
-      const response = await authenticatedFetch('https://aboki-b2b-eobk.onrender.com/api/v1/admin/users');
+      const response = await authenticatedFetch(
+        `https://aboki-b2b-eobk.onrender.com/api/v1/admin/users`
+      );
       
       if (response.ok) {
         const result = await response.json();
-        setAllUsers(result.data || []);
+        console.log('All users API response:', result); // Debug log
+        const usersArray = Array.isArray(result.data) ? result.data : Array.isArray(result.data?.users) ? result.data.users : [];
+        setAllUsers(usersArray);
+      } else {
+        console.error('All users API error:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Failed to load all users:', error);
@@ -105,6 +154,73 @@ const AdminDashboard = () => {
     }
   };
 
+  // Enhanced search function
+  const searchUsers = useCallback((users, query) => {
+    if (!query.trim()) return users;
+    
+    const searchTerm = query.toLowerCase().trim();
+    return users.filter(user => {
+      const fullName = (user.fullName || `${user.firstName} ${user.lastName}` || '').toLowerCase();
+      const email = (user.email || '').toLowerCase();
+      const businessName = (user.businessName || '').toLowerCase();
+      
+      return fullName.includes(searchTerm) || 
+             email.includes(searchTerm) || 
+             businessName.includes(searchTerm);
+    });
+  }, []);
+
+  // Enhanced filter function
+  const filterUsers = useCallback((users) => {
+    return users.filter(user => {
+      // Status filter
+      if (filters.status !== 'all') {
+        if (filters.status === 'approved' && !user.isApproved) return false;
+        if (filters.status === 'pending' && (user.isApproved || !user.isVerified)) return false;
+        if (filters.status === 'rejected' && (user.isApproved || user.isVerified)) return false;
+        if (filters.status === 'unverified' && user.isVerified) return false;
+      }
+
+      // API Access filter
+      if (filters.apiAccess !== 'all') {
+        if (filters.apiAccess === 'enabled' && !user.hasApiAccess) return false;
+        if (filters.apiAccess === 'disabled' && user.hasApiAccess) return false;
+      }
+
+      // Date Range filter
+      if (filters.dateRange !== 'all') {
+        const userDate = new Date(user.createdAt);
+        const now = new Date();
+        const daysDiff = Math.floor((now - userDate) / (1000 * 60 * 60 * 24));
+
+        if (filters.dateRange === '7d' && daysDiff > 7) return false;
+        if (filters.dateRange === '30d' && daysDiff > 30) return false;
+        if (filters.dateRange === '90d' && daysDiff > 90) return false;
+      }
+
+      return true;
+    });
+  }, [filters]);
+
+  // Get filtered and paginated users
+  const getProcessedUsers = useCallback((users) => {
+    const searched = searchUsers(users, searchQuery);
+    const filtered = filterUsers(searched);
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    
+    return {
+      users: filtered.slice(startIndex, endIndex),
+      totalUsers: filtered.length,
+      totalPages: Math.ceil(filtered.length / itemsPerPage)
+    };
+  }, [searchQuery, filterUsers, searchUsers, currentPage, itemsPerPage]);
+
+  // Memoized processed data
+  const processedPendingUsers = useMemo(() => getProcessedUsers(pendingUsers), [pendingUsers, getProcessedUsers]);
+  const processedAllUsers = useMemo(() => getProcessedUsers(allUsers), [allUsers, getProcessedUsers]);
+
   // Approve user
   const approveUser = async (userId) => {
     setActionLoading({ ...actionLoading, [userId]: 'approving' });
@@ -120,14 +236,14 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        await loadDashboardData(); // Refresh data
-        alert('User approved successfully!');
+        await loadDashboardData(false);
+        alert('User approved successfully! 🎉');
       } else {
-        alert('Failed to approve user');
+        alert('Failed to approve user ❌');
       }
     } catch (error) {
       console.error('Approve error:', error);
-      alert('Error approving user');
+      alert('Error approving user ❌');
     } finally {
       setActionLoading({ ...actionLoading, [userId]: null });
     }
@@ -151,14 +267,14 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        await loadDashboardData(); // Refresh data
-        alert('User rejected successfully!');
+        await loadDashboardData(false);
+        alert('User rejected successfully! ✅');
       } else {
-        alert('Failed to reject user');
+        alert('Failed to reject user ❌');
       }
     } catch (error) {
       console.error('Reject error:', error);
-      alert('Error rejecting user');
+      alert('Error rejecting user ❌');
     } finally {
       setActionLoading({ ...actionLoading, [userId]: null });
     }
@@ -174,25 +290,72 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        await loadAllUsers(); // Refresh user list
-        alert(`API access ${currentStatus ? 'disabled' : 'enabled'} successfully!`);
+        await loadAllUsers();
+        alert(`API access ${currentStatus ? 'disabled' : 'enabled'} successfully! 🔑`);
       } else {
-        alert('Failed to toggle API access');
+        alert('Failed to toggle API access ❌');
       }
     } catch (error) {
       console.error('Toggle API access error:', error);
-      alert('Error toggling API access');
+      alert('Error toggling API access ❌');
     } finally {
       setActionLoading({ ...actionLoading, [userId]: null });
     }
   };
 
+  // Resend verification email
+  const resendVerification = async (userId) => {
+    setActionLoading({ ...actionLoading, [userId]: 'resending' });
+    
+    try {
+      const response = await authenticatedFetch(`https://aboki-b2b-eobk.onrender.com/api/v1/admin/users/${userId}/resend-verification`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        alert('Verification email sent successfully! 📧');
+      } else {
+        alert('Failed to send verification email ❌');
+      }
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      alert('Error sending verification email ❌');
+    } finally {
+      setActionLoading({ ...actionLoading, [userId]: null });
+    }
+  };
+
+  // Manual refresh
+  const handleRefresh = async () => {
+    setLastRefresh(new Date());
+    await loadDashboardData(false);
+  };
+
+  // Reset filters
+  const resetFilters = () => {
+    setSearchQuery('');
+    setFilters({
+      status: 'all',
+      apiAccess: 'all',
+      dateRange: 'all'
+    });
+    setCurrentPage(1);
+  };
+
   // Logout
   const handleLogout = () => {
+    if (refreshInterval) clearInterval(refreshInterval);
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
     router.push('/admin/login');
   };
+
+  // Get current data based on active tab
+  const getCurrentData = () => {
+    return activeTab === 'pending' ? processedPendingUsers : processedAllUsers;
+  };
+
+  const currentData = getCurrentData();
 
   if (loading) {
     return (
@@ -221,6 +384,11 @@ const AdminDashboard = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <span className={`w-2 h-2 rounded-full ${autoRefresh ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+              Last refresh: {lastRefresh.toLocaleTimeString()}
+            </div>
+            
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900">{adminData?.name || adminData?.email}</p>
               <p className="text-xs text-gray-500">{adminData?.role || 'Admin'}</p>
@@ -257,7 +425,7 @@ const AdminDashboard = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Pending Approval</p>
-                <p className="text-2xl font-bold text-amber-600">{pendingUsers.length}</p>
+                <p className="text-2xl font-bold text-amber-600">{Array.isArray(pendingUsers) ? pendingUsers.length : 0}</p>
               </div>
             </div>
           </div>
@@ -287,6 +455,100 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+        {/* Enhanced Controls */}
+        <div className="bg-white rounded-lg shadow mb-6">
+          <div className="p-6">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+              {/* Search Bar */}
+              <div className="flex-1 min-w-0">
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">🔍</span>
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or business name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Filters */}
+              <div className="flex flex-wrap gap-3">
+                {/* Status Filter */}
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({...filters, status: e.target.value})}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                >
+                  <option value="all">All Status</option>
+                  <option value="approved">✅ Approved</option>
+                  <option value="pending">⏳ Pending</option>
+                  <option value="rejected">❌ Rejected</option>
+                  <option value="unverified">📧 Unverified</option>
+                </select>
+
+                {/* API Access Filter */}
+                <select
+                  value={filters.apiAccess}
+                  onChange={(e) => setFilters({...filters, apiAccess: e.target.value})}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                >
+                  <option value="all">All API Access</option>
+                  <option value="enabled">🔓 Enabled</option>
+                  <option value="disabled">🔒 Disabled</option>
+                </select>
+
+                {/* Date Range Filter */}
+                <select
+                  value={filters.dateRange}
+                  onChange={(e) => setFilters({...filters, dateRange: e.target.value})}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                >
+                  <option value="all">All Time</option>
+                  <option value="7d">📅 Last 7 days</option>
+                  <option value="30d">📅 Last 30 days</option>
+                  <option value="90d">📅 Last 90 days</option>
+                </select>
+
+                {/* Controls */}
+                <button
+                  onClick={resetFilters}
+                  className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  🔄 Reset
+                </button>
+
+                <button
+                  onClick={handleRefresh}
+                  className="px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  ↻ Refresh
+                </button>
+
+                <button
+                  onClick={() => setAutoRefresh(!autoRefresh)}
+                  className={`px-3 py-2 rounded-lg transition-colors ${
+                    autoRefresh 
+                      ? 'text-green-600 bg-green-50 hover:bg-green-100' 
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {autoRefresh ? '⚡ Auto-refresh ON' : '⏸️ Auto-refresh OFF'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow">
           <div className="border-b border-gray-200">
@@ -299,7 +561,7 @@ const AdminDashboard = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Pending Users ({pendingUsers.length})
+                ⏳ Pending Users ({processedPendingUsers.totalUsers})
               </button>
               <button
                 onClick={() => setActiveTab('all')}
@@ -309,20 +571,43 @@ const AdminDashboard = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                All Users ({allUsers.length})
+                👥 All Users ({processedAllUsers.totalUsers})
               </button>
             </nav>
           </div>
 
           {/* Tab Content */}
           <div className="p-6">
+            {/* Results Summary */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm text-gray-600">
+                Showing {currentData.users.length} of {currentData.totalUsers} users
+                {(searchQuery || filters.status !== 'all' || filters.apiAccess !== 'all' || filters.dateRange !== 'all') && (
+                  <span className="ml-2 text-blue-600">(filtered)</span>
+                )}
+              </div>
+              
+              {/* Pagination Info */}
+              {currentData.totalPages > 1 && (
+                <div className="text-sm text-gray-600">
+                  Page {currentPage} of {currentData.totalPages}
+                </div>
+              )}
+            </div>
+
             {activeTab === 'pending' && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Users Awaiting Approval</h3>
-                {pendingUsers.length === 0 ? (
+                {currentData.users.length === 0 ? (
                   <div className="text-center py-8">
-                    <span className="text-6xl mb-4 block">🎉</span>
-                    <p className="text-gray-500">No users pending approval!</p>
+                    <span className="text-6xl mb-4 block">
+                      {processedPendingUsers.totalUsers === 0 ? '🎉' : '🔍'}
+                    </span>
+                    <p className="text-gray-500">
+                      {processedPendingUsers.totalUsers === 0 
+                        ? 'No users pending approval!' 
+                        : 'No users match your search criteria'}
+                    </p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -337,8 +622,8 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {pendingUsers.map((user) => (
-                          <tr key={user.id}>
+                        {currentData.users.map((user) => (
+                          <tr key={user.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <div className="flex-shrink-0 h-10 w-10">
@@ -361,25 +646,27 @@ const AdminDashboard = () => {
                               {new Date(user.createdAt).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800">
-                                Pending
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                ⏳ Pending
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                              <button
-                                onClick={() => approveUser(user.id)}
-                                disabled={actionLoading[user.id]}
-                                className="inline-flex items-center gap-1 text-green-600 hover:text-green-900 disabled:opacity-50"
-                              >
-                                {actionLoading[user.id] === 'approving' ? '⏳' : '✅'} Approve
-                              </button>
-                              <button
-                                onClick={() => rejectUser(user.id)}
-                                disabled={actionLoading[user.id]}
-                                className="inline-flex items-center gap-1 text-red-600 hover:text-red-900 disabled:opacity-50"
-                              >
-                                {actionLoading[user.id] === 'rejecting' ? '⏳' : '❌'} Reject
-                              </button>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => approveUser(user.id)}
+                                  disabled={actionLoading[user.id]}
+                                  className="inline-flex items-center gap-1 px-3 py-1 text-sm text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  {actionLoading[user.id] === 'approving' ? '⏳' : '✅'} Approve
+                                </button>
+                                <button
+                                  onClick={() => rejectUser(user.id)}
+                                  disabled={actionLoading[user.id]}
+                                  className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  {actionLoading[user.id] === 'rejecting' ? '⏳' : '❌'} Reject
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -393,76 +680,155 @@ const AdminDashboard = () => {
             {activeTab === 'all' && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">All Users</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">API Access</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {allUsers.map((user) => (
-                        <tr key={user.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-10 w-10">
-                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-blue-600">
-                                    {(user.fullName || user.firstName || user.email).charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {user.fullName || `${user.firstName} ${user.lastName}` || 'Unknown'}
-                                </div>
-                                <div className="text-sm text-gray-500">{user.businessName || 'No business name'}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              user.isApproved 
-                                ? 'bg-green-100 text-green-800' 
-                                : user.isVerified 
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {user.isApproved ? 'Approved' : user.isVerified ? 'Email Verified' : 'Unverified'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              user.hasApiAccess 
-                                ? 'bg-purple-100 text-purple-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {user.hasApiAccess ? 'Enabled' : 'Disabled'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button
-                              onClick={() => toggleApiAccess(user.id, user.hasApiAccess)}
-                              disabled={actionLoading[user.id]}
-                              className="text-purple-600 hover:text-purple-900 disabled:opacity-50"
-                            >
-                              {actionLoading[user.id] === 'toggling' 
-                                ? '⏳ Processing...' 
-                                : user.hasApiAccess 
-                                ? '🔒 Disable API' 
-                                : '🔓 Enable API'
-                              }
-                            </button>
-                          </td>
+                {currentData.users.length === 0 ? (
+                  <div className="text-center py-8">
+                    <span className="text-6xl mb-4 block">🔍</span>
+                    <p className="text-gray-500">No users match your search criteria</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">API Access</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {currentData.users.map((user) => (
+                          <tr key={user.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-10 w-10">
+                                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span className="text-sm font-medium text-blue-600">
+                                      {(user.fullName || user.firstName || user.email).charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {user.fullName || `${user.firstName} ${user.lastName}` || 'Unknown'}
+                                  </div>
+                                  <div className="text-sm text-gray-500">{user.businessName || 'No business name'}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                user.isApproved 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : user.isVerified 
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                              {user.isApproved ? '✅ Approved' : user.isVerified ? '📧 Email Verified' : '❌ Unverified'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                user.hasApiAccess 
+                                  ? 'bg-purple-100 text-purple-800' 
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {user.hasApiAccess ? '🔓 Enabled' : '🔒 Disabled'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : '🔹 Never'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => toggleApiAccess(user.id, user.hasApiAccess)}
+                                  disabled={actionLoading[user.id]}
+                                  className="inline-flex items-center gap-1 px-3 py-1 text-sm text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  {actionLoading[user.id] === 'toggling' 
+                                    ? '⏳' 
+                                    : user.hasApiAccess 
+                                    ? '🔒' 
+                                    : '🔓'
+                                  } {user.hasApiAccess ? 'Disable' : 'Enable'}
+                                </button>
+                                
+                                {!user.isVerified && (
+                                  <button
+                                    onClick={() => resendVerification(user.id)}
+                                    disabled={actionLoading[user.id]}
+                                    className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                                  >
+                                    {actionLoading[user.id] === 'resending' ? '⏳' : '📧'} Resend
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {currentData.totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 p-4 bg-gray-50 rounded-lg">
+                <div className="text-sm text-gray-600">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, currentData.totalUsers)} of {currentData.totalUsers} users
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ← Previous
+                  </button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, currentData.totalPages) }, (_, i) => {
+                      let pageNumber;
+                      if (currentData.totalPages <= 5) {
+                        pageNumber = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNumber = i + 1;
+                      } else if (currentPage >= currentData.totalPages - 2) {
+                        pageNumber = currentData.totalPages - 4 + i;
+                      } else {
+                        pageNumber = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNumber}
+                          onClick={() => setCurrentPage(pageNumber)}
+                          className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                            currentPage === pageNumber
+                              ? 'bg-red-600 text-white'
+                              : 'text-gray-600 hover:text-gray-800 hover:bg-white'
+                          }`}
+                        >
+                          {pageNumber}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(Math.min(currentData.totalPages, currentPage + 1))}
+                    disabled={currentPage === currentData.totalPages}
+                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next →
+                  </button>
                 </div>
               </div>
             )}
