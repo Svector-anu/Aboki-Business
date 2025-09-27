@@ -44,7 +44,7 @@ export default function HomePage() {
          </Head>
          <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">
-               <h1 className="text-2xl font-bold text-gray-900">
+               <h1 className="text-2xl font-bold text-blue-900">
                   Redirecting...
                </h1>
             </div>
