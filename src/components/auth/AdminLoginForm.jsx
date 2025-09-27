@@ -4,15 +4,61 @@ import { Button, Input, ToastContainer } from "../ui";
 import AuthLayout from "./AuthLayout";
 import { useForm } from "../../hooks/useForm";
 import { validateSignIn } from "../../utils/validation";
-import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../hooks/useToast";
 
-const SignInForm = () => {
+const AdminLoginForm = () => {
    const router = useRouter();
    const [loading, setLoading] = useState(false);
    const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
-   const { login } = useAuth();
    const { toasts, showSuccess, showError, showInfo, hideToast } = useToast();
+
+   // Admin login function
+   const adminLogin = async (email, password) => {
+      try {
+         console.log("Attempting admin login with real API...", { email });
+
+         const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/admin/auth/login', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+               email,
+               password
+            })
+         });
+
+         const result = await response.json();
+         console.log("Admin API Response:", result);
+
+         if (result.success && result.data) {
+            const { admin: adminData, token } = result.data;
+            
+            // Store admin token and data
+            if (typeof window !== "undefined") {
+               localStorage.setItem("admin_token", token);
+               localStorage.setItem("admin_user", JSON.stringify(adminData));
+            }
+
+            return { 
+               success: true, 
+               admin: adminData,
+               token: token
+            };
+         } else {
+            return {
+               success: false,
+               error: result.message || "Admin login failed. Please try again."
+            };
+         }
+      } catch (error) {
+         console.error("Admin login network error:", error);
+         return { 
+            success: false, 
+            error: "Network error. Please check your connection and try again." 
+         };
+      }
+   };
 
    // Forgot password handler
    const handleForgotPassword = async () => {
@@ -24,7 +70,7 @@ const SignInForm = () => {
       setForgotPasswordLoading(true);
       
       try {
-         const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/auth/forgot-password', {
+         const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/admin/auth/forgot-password', {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
@@ -40,7 +86,7 @@ const SignInForm = () => {
             showError(result.message || "Failed to send reset email. Please try again.");
          }
       } catch (error) {
-         console.error("Forgot password error:", error);
+         console.error("Admin forgot password error:", error);
          showError("Network error. Please check your connection and try again.");
       } finally {
          setForgotPasswordLoading(false);
@@ -55,68 +101,41 @@ const SignInForm = () => {
       validationSchema: validateSignIn,
       onSubmit: async (data) => {
          setLoading(true);
-
-         // Show loading toast
-         const loadingToastId = showInfo("Signing you in...", 2000);
+         showInfo("Signing you in...", 2000);
 
          try {
-            console.log("Attempting login with:", data);
+            console.log("Attempting admin login with:", data);
 
-            const result = await login(data.email, data.password);
+            const result = await adminLogin(data.email, data.password);
 
             if (result.success) {
-               console.log("Login successful:", result);
-               const userData = result.user;
+               console.log("Admin login successful:", result);
+               const adminData = result.admin;
 
-               // Show success toast
-               showSuccess(`Welcome back, ${userData.fullName || userData.firstName}! 🎉`);
+               showSuccess(`Welcome back, ${adminData.name || adminData.fullName || 'Admin'}! 🎉`);
 
-               // Smart routing based on user status
+               // Redirect to admin dashboard
                setTimeout(() => {
-                  if (!userData.isEmailVerified) {
-                     // User hasn't verified email yet
-                     showInfo("Please verify your email address to continue.");
-                     router.push(`/auth/check-email?email=${encodeURIComponent(userData.email)}`);
-                  } else if (userData.role === 'admin' || userData.role === 'super_admin') {
-                     // Admin users go to admin dashboard
-                     router.push("/admin/dashboard");
-                  } else {
-                     // Email verified users go to main dashboard
-                     // (API access status will be shown inside the dashboard)
-                     router.push("/dashboard");
-                  }
+                  router.push("/admin/dashboard");
                }, 1000);
             } else {
-               console.log("Login failed:", result.error);
+               console.log("Admin login failed:", result.error);
 
                // Show specific error messages
-               if (result.error.includes("not verified") || result.error.includes("verify")) {
-                  showError("❌ Please verify your email address before signing in.");
-                  setTimeout(() => {
-                     router.push(`/auth/check-email?email=${encodeURIComponent(values.email)}`);
-                  }, 2000);
-               } else if (result.error.includes("Invalid email or password")) {
-                  showError(
-                     "❌ Invalid email or password. Please check your credentials."
-                  );
+               if (result.error.includes("Invalid email or password")) {
+                  showError("❌ Invalid admin credentials. Please check your email and password.");
                } else if (result.error.includes("User not found")) {
-                  showError("❌ No account found with this email address.");
-               } else if (result.error.includes("password")) {
-                  showError("❌ Incorrect password. Please try again.");
-               } else if (result.error.includes("pending") || result.error.includes("approval")) {
-                  showError("❌ Your account is pending admin approval.");
-                  setTimeout(() => {
-                     router.push("/auth/pending-approval");
-                  }, 2000);
+                  showError("❌ Admin account not found with this email address.");
+               } else if (result.error.includes("not authorized") || result.error.includes("permission")) {
+                  showError("❌ You don't have admin privileges. Please contact support.");
                } else {
-                  showError(`❌ Login failed: ${result.error}`);
+                  showError(`❌ Admin login failed: ${result.error}`);
                }
 
-               // Also set form error for field highlighting
                setError("email", result.error);
             }
          } catch (error) {
-            console.error("Login error:", error);
+            console.error("Admin login error:", error);
             showError("❌ An unexpected error occurred. Please try again.");
             setError("email", "An unexpected error occurred");
          } finally {
@@ -127,21 +146,25 @@ const SignInForm = () => {
 
    return (
       <>
-         <AuthLayout title="Sign in to your account">
+         <AuthLayout title="Admin Portal" subtitle="Secure admin access to Aboki B2B">
             <div className="space-y-6">
-               {/* Welcome Message */}
+               {/* Admin Welcome Message */}
                <div className="text-center pb-2">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-full mb-4">
+                     <span className="text-red-600 text-sm">🔒</span>
+                     <span className="text-red-800 text-sm font-medium">Admin Access Required</span>
+                  </div>
                   <p className="text-gray-600 text-sm">
-                     Welcome back! Please sign in to access your crypto business dashboard.
+                     Secure portal for Aboki B2B administrators. Please sign in with your admin credentials.
                   </p>
                </div>
 
                <form onSubmit={handleSubmit} className="space-y-6">
                   <Input
-                     label="Email address"
+                     label="Admin Email"
                      name="email"
                      type="email"
-                     placeholder="Enter your email address"
+                     placeholder="Enter your admin email address"
                      value={values.email}
                      onChange={handleChange}
                      error={errors.email}
@@ -151,7 +174,7 @@ const SignInForm = () => {
                   <div>
                      <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-700">
-                           Password
+                           Admin Password
                         </label>
                         <button
                            type="button"
@@ -179,7 +202,7 @@ const SignInForm = () => {
                      <Input
                         name="password"
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder="Enter your admin password"
                         value={values.password}
                         onChange={handleChange}
                         error={errors.password}
@@ -189,7 +212,7 @@ const SignInForm = () => {
 
                   <Button
                      type="submit"
-                     className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transform hover:scale-[1.02] transition-all duration-200"
+                     className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 transform hover:scale-[1.02] transition-all duration-200"
                      loading={loading}
                      disabled={loading}>
                      {loading ? (
@@ -215,7 +238,7 @@ const SignInForm = () => {
                         </div>
                      ) : (
                         <span className="flex items-center justify-center gap-2">
-                           <span>Sign in</span>
+                           <span>🔐 Admin Sign In</span>
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                            </svg>
@@ -228,13 +251,13 @@ const SignInForm = () => {
                <div className="flex flex-col space-y-4">
                   <div className="text-center">
                      <span className="text-gray-600">
-                        Don't have an account?{" "}
+                        Need regular user access?{" "}
                      </span>
                      <button
                         type="button"
-                        onClick={() => router.push("/auth/signup")}
+                        onClick={() => router.push("/auth/signin")}
                         className="text-purple-600 hover:text-purple-700 font-medium transition-colors">
-                        Sign up
+                        User Login
                      </button>
                   </div>
 
@@ -242,36 +265,36 @@ const SignInForm = () => {
                   <div className="pt-6 border-t border-gray-100">
                      <div className="text-center space-y-4">
                         {/* Security Badge */}
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-full">
-                           <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-full">
+                           <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v2H0V8a8 8 0 1118 0z" clipRule="evenodd" />
                            </svg>
-                           <span className="text-sm font-medium text-green-800">Bank-Grade Security</span>
+                           <span className="text-sm font-medium text-red-800">Admin-Level Security</span>
                         </div>
                         
-                        {/* Feature Icons */}
+                        {/* Admin Features */}
                         <div className="flex items-center justify-center space-x-6 text-xs text-gray-500">
-                           <div className="flex items-center gap-1 group hover:text-purple-600 transition-colors cursor-pointer">
-                              <span className="text-base">🏦</span>
-                              <span className="group-hover:font-medium">Multi-Chain</span>
+                           <div className="flex items-center gap-1 group hover:text-red-600 transition-colors cursor-pointer">
+                              <span className="text-base">👥</span>
+                              <span className="group-hover:font-medium">User Management</span>
                            </div>
                            <div className="w-px h-4 bg-gray-300"></div>
-                           <div className="flex items-center gap-1 group hover:text-purple-600 transition-colors cursor-pointer">
-                              <span className="text-base">🇳🇬</span>
-                              <span className="group-hover:font-medium">Nigerian Banking</span>
+                           <div className="flex items-center gap-1 group hover:text-red-600 transition-colors cursor-pointer">
+                              <span className="text-base">📊</span>
+                              <span className="group-hover:font-medium">Analytics</span>
                            </div>
                            <div className="w-px h-4 bg-gray-300"></div>
-                           <div className="flex items-center gap-1 group hover:text-purple-600 transition-colors cursor-pointer">
-                              <span className="text-base">⚡</span>
-                              <span className="group-hover:font-medium">Real-time</span>
+                           <div className="flex items-center gap-1 group hover:text-red-600 transition-colors cursor-pointer">
+                              <span className="text-base">🔑</span>
+                              <span className="group-hover:font-medium">API Control</span>
                            </div>
                         </div>
                         
                         {/* Company Badge */}
                         <div className="flex items-center justify-center gap-2">
-                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                           <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                            <p className="text-xs text-gray-400 font-medium">
-                              Powered by <span className="text-purple-600">Aboki</span> • Trusted by 1000+ businesses
+                              Secure Admin Portal • <span className="text-red-600">Aboki B2B</span>
                            </p>
                         </div>
                      </div>
@@ -290,4 +313,4 @@ const SignInForm = () => {
    );
 };
 
-export default SignInForm;
+export default AdminLoginForm;
