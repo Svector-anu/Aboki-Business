@@ -50,6 +50,27 @@ export default function PendingVerification({ profileData, errorResponse }) {
 
       try {
          const token = localStorage.getItem('aboki_token');
+         
+         // First, check if business profile already exists
+         const checkResponse = await fetch('https://api.aboki.xyz/api/v1/business/profile', {
+            method: 'GET',
+            headers: {
+               'accept': 'application/json',
+               'Authorization': `Bearer ${token}`
+            }
+         });
+
+         const checkResult = await checkResponse.json();
+
+         // If profile already exists and API is enabled, redirect to dashboard
+         if (checkResponse.ok && checkResult.success && checkResult.data) {
+            console.log('Business profile already exists:', checkResult.data);
+            alert('Business profile already exists! Redirecting to dashboard...');
+            router.push('/dashboard');
+            return;
+         }
+
+         // If no profile exists, create new one
          const response = await fetch('https://api.aboki.xyz/api/v1/business/create', {
             method: 'POST',
             headers: {
@@ -63,7 +84,6 @@ export default function PendingVerification({ profileData, errorResponse }) {
 
          if (result.success) {
             alert('Business profile created successfully! Redirecting to dashboard...');
-            // Redirect to main dashboard/home page
             router.push('/dashboard');
          } else {
             alert(result.message || 'Failed to create business profile');

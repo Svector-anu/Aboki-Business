@@ -48,9 +48,7 @@ export default function HomePage() {
                </div>
 
                {/* Company tagline */}
-               <p className="text-sm text-white/80 font-medium tracking-wide mt-6">
-                  Crypto Business Platform
-               </p>
+           
             </div>
 
             {/* Loading animation */}
