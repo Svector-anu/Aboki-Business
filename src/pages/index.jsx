@@ -38,7 +38,7 @@ export default function HomePage() {
                <div className={`relative w-24 h-24 mx-auto rounded-full bg-gradient-to-r from-white/10 to-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center p-4 ${showPulse ? 'animate-pulse' : ''}`}>
                   {/* Logo SVG */}
                   <img 
-                     src="/logo.svg" 
+                     src="/assets/icons/logo.svg" 
                      alt="Aboki Logo" 
                      className="w-12 h-12 object-contain filter brightness-0 invert"
                   />
