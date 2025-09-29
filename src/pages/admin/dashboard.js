@@ -105,7 +105,7 @@ const AdminDashboard = () => {
   const loadPendingUsers = async () => {
     try {
       const response = await authenticatedFetch(
-        `https://aboki-b2b-eobk.onrender.com/api/v1/admin/users/pending-verification`
+        `https://api.aboki.xyz/api/v1/admin/users/pending-verification`
       );
       
       if (response.ok) {
@@ -124,7 +124,7 @@ const AdminDashboard = () => {
   const loadAllUsers = async () => {
     try {
       const response = await authenticatedFetch(
-        `https://aboki-b2b-eobk.onrender.com/api/v1/admin/users`
+        `https://api.aboki.xyz/api/v1/admin/users`
       );
       
       if (response.ok) {
@@ -143,7 +143,7 @@ const AdminDashboard = () => {
   // Load statistics
   const loadStats = async () => {
     try {
-      const response = await authenticatedFetch('https://aboki-b2b-eobk.onrender.com/api/v1/admin/users/stats');
+      const response = await authenticatedFetch('https://api.aboki.xyz/api/v1/admin/users/stats');
       
       if (response.ok) {
         const result = await response.json();
@@ -226,7 +226,7 @@ const AdminDashboard = () => {
     setActionLoading({ ...actionLoading, [userId]: 'approving' });
     
     try {
-      const response = await authenticatedFetch(`https://aboki-b2b-eobk.onrender.com/api/v1/admin/users/${userId}/verify`, {
+      const response = await authenticatedFetch(`https://api.aboki.xyz/api/v1/admin/users/${userId}/verify`, {
         method: 'POST',
         body: JSON.stringify({
           action: 'approve',
@@ -257,7 +257,7 @@ const AdminDashboard = () => {
     setActionLoading({ ...actionLoading, [userId]: 'rejecting' });
     
     try {
-      const response = await authenticatedFetch(`https://aboki-b2b-eobk.onrender.com/api/v1/admin/users/${userId}/verify`, {
+      const response = await authenticatedFetch(`https://api.aboki.xyz/api/v1/admin/users/${userId}/verify`, {
         method: 'POST',
         body: JSON.stringify({
           action: 'reject',
@@ -285,7 +285,7 @@ const AdminDashboard = () => {
     setActionLoading({ ...actionLoading, [userId]: 'toggling' });
     
     try {
-      const response = await authenticatedFetch(`https://aboki-b2b-eobk.onrender.com/api/v1/admin/users/${userId}/api-access`, {
+      const response = await authenticatedFetch(`https://api.aboki.xyz/api/v1/admin/users/${userId}/api-access`, {
         method: 'PUT'
       });
 
@@ -308,7 +308,7 @@ const AdminDashboard = () => {
     setActionLoading({ ...actionLoading, [userId]: 'resending' });
     
     try {
-      const response = await authenticatedFetch(`https://aboki-b2b-eobk.onrender.com/api/v1/admin/users/${userId}/resend-verification`, {
+      const response = await authenticatedFetch(`https://api.aboki.xyz/api/v1/admin/users/${userId}/resend-verification`, {
         method: 'POST'
       });
 

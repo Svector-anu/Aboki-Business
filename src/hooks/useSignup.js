@@ -19,7 +19,7 @@ const useSignup = () => {
         // You may want to store businessName separately or modify your API
       };
 
-      const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/auth/signup', {
+      const response = await fetch('https://api.aboki.xyz/api/v1/auth/signup', {
         method: 'POST',
         headers: {
           'accept': 'application/json',

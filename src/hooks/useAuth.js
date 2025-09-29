@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
          console.log("Attempting login with real API...", { email });
 
          // Call real Aboki B2B API - PRODUCTION URL
-         const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/auth/login', {
+         const response = await fetch('https://api.aboki.xyz/api/v1/auth/login', {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
          console.log("Attempting registration with real API...", userData);
 
          // Call real Aboki B2B API - PRODUCTION URL
-         const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/auth/signup', {
+         const response = await fetch('https://api.aboki.xyz/api/v1/auth/signup', {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
@@ -154,7 +154,7 @@ export const AuthProvider = ({ children }) => {
             if (token && storedUser) {
                // Validate token with API
                try {
-                  const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/auth/profile', {
+                  const response = await fetch('https://api.aboki.xyz/api/v1/auth/profile', {
                      method: 'GET',
                      headers: {
                         'Authorization': `Bearer ${token}`,
@@ -240,7 +240,7 @@ export const AuthProvider = ({ children }) => {
    // Check verification status
    const checkVerificationStatus = async () => {
       try {
-         const response = await authenticatedFetch('https://aboki-b2b-eobk.onrender.com/api/v1/auth/verification-status');
+         const response = await authenticatedFetch('https://api.aboki.xyz/api/v1/auth/verification-status');
          
          if (response.ok) {
             const result = await response.json();

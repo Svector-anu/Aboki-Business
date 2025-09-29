@@ -22,7 +22,7 @@ const EmailVerificationPage = () => {
         console.log('Verifying email with token:', token);
 
         // Call the real Aboki B2B API
-        const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/auth/verify-email', {
+        const response = await fetch('https://api.aboki.xyz/api/v1/auth/verify-email', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

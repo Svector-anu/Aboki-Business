@@ -24,7 +24,7 @@ const SignInForm = () => {
       setForgotPasswordLoading(true);
       
       try {
-         const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/auth/forgot-password', {
+         const response = await fetch('https://api.aboki.xyz/api/v1/auth/forgot-password', {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',

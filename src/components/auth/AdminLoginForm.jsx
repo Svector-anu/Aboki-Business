@@ -17,7 +17,7 @@ const AdminLoginForm = () => {
       try {
          console.log("Attempting admin login with real API...", { email });
 
-         const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/admin/auth/login', {
+         const response = await fetch('https://api.aboki.xyz/api/v1/admin/auth/login', {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ const AdminLoginForm = () => {
       setForgotPasswordLoading(true);
       
       try {
-         const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/admin/auth/forgot-password', {
+         const response = await fetch('https://api.aboki.xyz/api/v1/admin/auth/forgot-password', {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
