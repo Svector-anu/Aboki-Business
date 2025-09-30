@@ -24,7 +24,6 @@ export default function DashboardPage() {
       const fetchProfile = async () => {
          if (!user) return;
          
-         // Use 'aboki_token' to match what useAuth.js saves
          const token = localStorage.getItem('aboki_token');
          
          console.log('=== Dashboard Fetch Debug ===');
@@ -49,7 +48,6 @@ export default function DashboardPage() {
             console.log('Response status:', response.status);
             console.log('Response ok:', response.ok);
             
-            // Always try to parse JSON response, even for errors
             let data;
             const contentType = response.headers.get("content-type");
             console.log('Content-Type:', contentType);
@@ -68,24 +66,20 @@ export default function DashboardPage() {
             }
 
             if (response.ok) {
-               // Success - user has full access
                console.log('Success response, setting profileData');
                setProfileData(data);
                setErrorResponse(null);
             } else if (response.status === 403) {
-               // 403 - Contains verification status info in the response body
                console.log('403 Forbidden, setting errorResponse with data:', data);
                setErrorResponse(data);
                setProfileData(null);
             } else if (response.status === 401) {
-               // Unauthorized - redirect to login
                console.log('401 Unauthorized, removing token and redirecting');
                localStorage.removeItem('aboki_token');
                localStorage.removeItem('aboki_user');
                router.push('/auth/signin');
                return;
             } else {
-               // Other errors
                console.log('Other error status, setting errorResponse');
                setErrorResponse(data || {
                   message: 'An error occurred',
@@ -131,7 +125,6 @@ export default function DashboardPage() {
       return null;
    }
 
-   // Determine if user should see verification/business creation page
    const responseData = errorResponse || profileData;
    const needsVerification = 
       errorResponse !== null || 

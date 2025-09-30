@@ -1,22 +1,22 @@
 export default function VerifiedDashboard() {
     return (
-       <>
-          <div className="mb-8">
-             <h1 className="text-3xl font-bold text-gray-900">
+       <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-20">
+          <div className="mb-4 sm:mb-6">
+             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                 Dashboard
              </h1>
-             <p className="text-gray-600 mt-2">
+             <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 Manage your crypto business operations
              </p>
           </div>
  
           {/* Dashboard Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4 mb-4 sm:mb-6">
+             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center">
-                   <div className="p-3 bg-purple-100 rounded-lg">
+                   <div className="p-2.5 bg-purple-100 rounded-lg">
                       <svg
-                         className="h-6 w-6 text-purple-600"
+                         className="h-5 w-5 text-purple-600"
                          fill="none"
                          viewBox="0 0 24 24"
                          stroke="currentColor">
@@ -28,22 +28,22 @@ export default function VerifiedDashboard() {
                          />
                       </svg>
                    </div>
-                   <div className="ml-4">
-                      <h3 className="text-sm font-medium text-gray-500">
+                   <div className="ml-3 flex-1">
+                      <h3 className="text-xs font-medium text-gray-500">
                          Wallet Balance
                       </h3>
-                      <p className="text-2xl font-bold text-purple-600">
+                      <p className="text-xl sm:text-2xl font-bold text-purple-600 mt-0.5">
                          $0.00
                       </p>
                    </div>
                 </div>
              </div>
  
-             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center">
-                   <div className="p-3 bg-blue-100 rounded-lg">
+                   <div className="p-2.5 bg-blue-100 rounded-lg">
                       <svg
-                         className="h-6 w-6 text-blue-600"
+                         className="h-5 w-5 text-blue-600"
                          fill="none"
                          viewBox="0 0 24 24"
                          stroke="currentColor">
@@ -55,20 +55,20 @@ export default function VerifiedDashboard() {
                          />
                       </svg>
                    </div>
-                   <div className="ml-4">
-                      <h3 className="text-sm font-medium text-gray-500">
+                   <div className="ml-3 flex-1">
+                      <h3 className="text-xs font-medium text-gray-500">
                          Transactions
                       </h3>
-                      <p className="text-2xl font-bold text-blue-600">0</p>
+                      <p className="text-xl sm:text-2xl font-bold text-blue-600 mt-0.5">0</p>
                    </div>
                 </div>
              </div>
  
-             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center">
-                   <div className="p-3 bg-green-100 rounded-lg">
+                   <div className="p-2.5 bg-green-100 rounded-lg">
                       <svg
-                         className="h-6 w-6 text-green-600"
+                         className="h-5 w-5 text-green-600"
                          fill="none"
                          viewBox="0 0 24 24"
                          stroke="currentColor">
@@ -80,11 +80,11 @@ export default function VerifiedDashboard() {
                          />
                       </svg>
                    </div>
-                   <div className="ml-4">
-                      <h3 className="text-sm font-medium text-gray-500">
+                   <div className="ml-3 flex-1">
+                      <h3 className="text-xs font-medium text-gray-500">
                          Growth
                       </h3>
-                      <p className="text-2xl font-bold text-green-600">
+                      <p className="text-xl sm:text-2xl font-bold text-green-600 mt-0.5">
                          +0%
                       </p>
                    </div>
@@ -93,60 +93,60 @@ export default function VerifiedDashboard() {
           </div>
  
           {/* Getting Started */}
-          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-             <h2 className="text-xl font-bold text-gray-900 mb-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
+             <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3">
                 Getting Started
              </h2>
-             <div className="space-y-4">
-                <div className="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors cursor-pointer">
+             <div className="space-y-2.5">
+                <div className="flex items-start p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors cursor-pointer">
                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                         <span className="text-white font-bold">1</span>
+                      <div className="w-7 h-7 bg-purple-600 rounded-full flex items-center justify-center">
+                         <span className="text-white font-bold text-sm">1</span>
                       </div>
                    </div>
-                   <div className="ml-4">
-                      <h3 className="text-lg font-medium text-gray-900">
+                   <div className="ml-3 flex-1">
+                      <h3 className="text-sm font-semibold text-gray-900 leading-tight">
                          Complete Your Profile
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-xs text-gray-600 mt-1 leading-relaxed">
                          Add additional information to your business profile
                       </p>
                    </div>
                 </div>
  
-                <div className="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
+                <div className="flex items-start p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer">
                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                         <span className="text-white font-bold">2</span>
+                      <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center">
+                         <span className="text-white font-bold text-sm">2</span>
                       </div>
                    </div>
-                   <div className="ml-4">
-                      <h3 className="text-lg font-medium text-gray-900">
+                   <div className="ml-3 flex-1">
+                      <h3 className="text-sm font-semibold text-gray-900 leading-tight">
                          Connect Your Wallet
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-xs text-gray-600 mt-1 leading-relaxed">
                          Link your crypto wallet to start trading
                       </p>
                    </div>
                 </div>
  
-                <div className="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors cursor-pointer">
+                <div className="flex items-start p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors cursor-pointer">
                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                         <span className="text-white font-bold">3</span>
+                      <div className="w-7 h-7 bg-green-600 rounded-full flex items-center justify-center">
+                         <span className="text-white font-bold text-sm">3</span>
                       </div>
                    </div>
-                   <div className="ml-4">
-                      <h3 className="text-lg font-medium text-gray-900">
+                   <div className="ml-3 flex-1">
+                      <h3 className="text-sm font-semibold text-gray-900 leading-tight">
                          Start Trading
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-xs text-gray-600 mt-1 leading-relaxed">
                          Begin your crypto business journey
                       </p>
                    </div>
                 </div>
              </div>
           </div>
-       </>
+       </div>
     );
  }
