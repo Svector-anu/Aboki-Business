@@ -162,8 +162,8 @@ const PendingApprovalPage = () => {
             </h3>
             <div className="text-blue-800 text-sm space-y-2">
               <p>• Our admin team will review your account within 1-2 business days</p>
-              <p>• You'll receive an email notification once your account is approved</p>
-              <p>• After approval, you'll have full access to our API and dashboard</p>
+              <p>• You&apos;ll receive an email notification once your account is approved</p>
+              <p>• After approval, you&apos;ll have full access to our API and dashboard</p>
               <p>• You can then start processing crypto payments for your business</p>
             </div>
           </div>
