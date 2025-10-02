@@ -62,7 +62,7 @@ const CheckEmailPage = () => {
             </h1>
             
             <p className="text-gray-600 mb-6">
-              We've sent a verification link to
+                We&apos;ve sent a verification link to
             </p>
 
             {/* Email Display */}
@@ -87,8 +87,7 @@ const CheckEmailPage = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-blue-200 text-blue-900 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
-                  <span>Click the "Verify Email Address" button</span>
-                </li>
+                         <span>Click the &quot;Verify Email Address&quot; button</span>                </li>
                 <li className="flex items-start gap-2">
                   <span className="bg-blue-200 text-blue-900 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
                   <span>Return here to sign in to your account</span>
