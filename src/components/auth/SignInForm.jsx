@@ -24,7 +24,7 @@ const SignInForm = () => {
       setForgotPasswordLoading(true);
       
       try {
-         const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/auth/forgot-password', {
+         const response = await fetch('https://api.aboki.xyz/api/v1/auth/forgot-password', {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
@@ -169,7 +169,7 @@ const SignInForm = () => {
                            ) : (
                               <>
                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 12H9v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-6.586l4.686-4.686a2.828 0 012.828 0L16 8.414a2 2 0 011.414.586L19 11V9a2 2 0 00-2-2h-1z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                  </svg>
                                  <span>Forgot password?</span>
                               </>
@@ -217,7 +217,7 @@ const SignInForm = () => {
                         <span className="flex items-center justify-center gap-2">
                            <span>Sign in</span>
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                            </svg>
                         </span>
                      )}
@@ -252,17 +252,23 @@ const SignInForm = () => {
                         {/* Feature Icons */}
                         <div className="flex items-center justify-center space-x-6 text-xs text-gray-500">
                            <div className="flex items-center gap-1 group hover:text-purple-600 transition-colors cursor-pointer">
-                              <span className="text-base">🏦</span>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                              </svg>
                               <span className="group-hover:font-medium">Multi-Chain</span>
                            </div>
                            <div className="w-px h-4 bg-gray-300"></div>
                            <div className="flex items-center gap-1 group hover:text-purple-600 transition-colors cursor-pointer">
-                              <span className="text-base">🇳🇬</span>
-                              <span className="group-hover:font-medium">Nigerian Banking</span>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span className="group-hover:font-medium">Global Banking</span>
                            </div>
                            <div className="w-px h-4 bg-gray-300"></div>
                            <div className="flex items-center gap-1 group hover:text-purple-600 transition-colors cursor-pointer">
-                              <span className="text-base">⚡</span>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
                               <span className="group-hover:font-medium">Real-time</span>
                            </div>
                         </div>

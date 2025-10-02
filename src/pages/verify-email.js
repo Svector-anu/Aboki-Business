@@ -22,7 +22,7 @@ const EmailVerificationPage = () => {
         console.log('Verifying email with token:', token);
 
         // Call the real Aboki B2B API
-        const response = await fetch('https://aboki-b2b-eobk.onrender.com/api/v1/auth/verify-email', {
+        const response = await fetch('https://api.aboki.xyz/api/v1/auth/verify-email', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -129,7 +129,9 @@ const EmailVerificationPage = () => {
                 className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transform hover:scale-105 transition-all duration-200 font-medium"
               >
                 <span>Continue to Sign In</span>
-                <span>→</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
               
               <p className="text-sm text-gray-500">
@@ -169,7 +171,9 @@ const EmailVerificationPage = () => {
                 className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium"
               >
                 <span>Go to Sign In</span>
-                <span>→</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
               
               <div className="text-center">
@@ -207,7 +211,7 @@ const EmailVerificationPage = () => {
           <div className="mt-2 flex items-center justify-center space-x-4 text-xs text-gray-400">
             <span>🛡️ Enterprise Security</span>
             <span>•</span>
-            <span>🇳🇬 Nigerian Banking</span>
+            <span>🌍 Global Banking</span>
             <span>•</span>
             <span>⚡ Real-time Processing</span>
           </div>
