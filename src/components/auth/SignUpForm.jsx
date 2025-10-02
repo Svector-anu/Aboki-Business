@@ -4,13 +4,12 @@ import { Button, Input, Checkbox, ToastContainer } from "../ui";
 import AuthLayout from "./AuthLayout";
 import { useForm } from "../../hooks/useForm";
 import { validateSignUp } from "../../utils/validation";
-import { useAuth } from "../../hooks/useAuth";
+import useSignup from "../../hooks/useSignup"; 
 import { useToast } from "../../hooks/useToast";
 
 const SignUpForm = () => {
    const router = useRouter();
-   const [loading, setLoading] = useState(false);
-   const { register } = useAuth();
+   const { signup, loading } = useSignup(); 
    const { toasts, showSuccess, showError, showInfo, showWarning, hideToast } =
       useToast();
 
@@ -27,18 +26,21 @@ const SignUpForm = () => {
          },
          validationSchema: validateSignUp,
          onSubmit: async (data) => {
-            setLoading(true);
-
             // Show loading toast
             showInfo("Creating your account...", 3000);
 
             try {
                console.log("Attempting registration with:", data);
 
-               const result = await register(data);
+               const result = await signup(data);
 
                if (result.success) {
                   console.log("Registration successful");
+
+                  // Store email for verification page
+                  if (typeof window !== 'undefined') {
+                     localStorage.setItem('pending_verification_email', data.email);
+                  }
 
                   // Show success toast
                   showSuccess(
@@ -50,13 +52,14 @@ const SignUpForm = () => {
 
                   // Show redirect info
                   setTimeout(() => {
-                     showInfo("Redirecting you to sign in...", 2000);
+                     showInfo("Redirecting to email verification...", 2000);
                   }, 1500);
 
-                  // Redirect to sign-in after showing messages
+                  // Redirect to check email page instead of sign-in
                   setTimeout(() => {
-                     router.push("/auth/signin");
+                     router.push(`/auth/check-email?email=${encodeURIComponent(data.email)}`);
                   }, 3000);
+
                } else {
                   console.log("Registration failed:", result.error);
 
@@ -85,8 +88,6 @@ const SignUpForm = () => {
                   "email",
                   "An unexpected error occurred during registration"
                );
-            } finally {
-               setLoading(false);
             }
          },
       });
@@ -94,13 +95,11 @@ const SignUpForm = () => {
    // Show password requirements info
    const showPasswordInfo = () => {
       showInfo(
-         `
-      Password Requirements:
-      • At least 8 characters long
-      • Contains uppercase letter
-      • Contains lowercase letter  
-      • Contains at least one number
-    `,
+         `Password Requirements:
+         • At least 8 characters long
+         • Contains uppercase letter
+         • Contains lowercase letter  
+         • Contains at least one number`,
          6000
       );
    };
@@ -109,8 +108,16 @@ const SignUpForm = () => {
       <>
          <AuthLayout
             title="Create Account"
-            subtitle="Empower your crypto business">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            subtitle="Join thousands of businesses using Aboki for crypto payments">
+            
+            {/* Welcome Message */}
+            <div className="text-center pb-4">
+               <p className="text-gray-600 text-sm">
+                  Start accepting crypto payments and converting to Nigerian Naira seamlessly
+               </p>
+            </div>
+
+            <div className="space-y-6">
                <Input
                   label="Business name"
                   name="businessName"
@@ -175,7 +182,7 @@ const SignUpForm = () => {
                   label="Email address"
                   name="email"
                   type="email"
-                  placeholder="Enter your email address"
+                  placeholder="Enter your business email address"
                   value={values.email}
                   onChange={handleChange}
                   error={errors.email}
@@ -214,18 +221,18 @@ const SignUpForm = () => {
                            type="button"
                            onClick={() =>
                               showInfo(
-                                 "Terms of Use: This is a demo application. In production, this would link to your actual terms."
+                                 "Terms of Service: By using Aboki B2B, you agree to our terms of service and privacy policy. Full terms available on our website."
                               )
                            }
                            className="text-purple-600 hover:text-purple-700 underline transition-colors">
-                           Terms of Use
+                           Terms of Service
                         </button>
                         , and I have read the{" "}
                         <button
                            type="button"
                            onClick={() =>
                               showInfo(
-                                 "Privacy Policy: This demo does not collect or store any real user data."
+                                 "Privacy Policy: We protect your data with enterprise-grade security. We never share your information with third parties."
                               )
                            }
                            className="text-purple-600 hover:text-purple-700 underline transition-colors">
@@ -242,8 +249,8 @@ const SignUpForm = () => {
                />
 
                <Button
-                  type="submit"
-                  className="w-full"
+                  onClick={handleSubmit}
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 transform hover:scale-[1.02] transition-all duration-200"
                   loading={loading}
                   disabled={!values.agreeToTerms || loading}>
                   {loading ? (
@@ -268,7 +275,10 @@ const SignUpForm = () => {
                         Creating account...
                      </div>
                   ) : (
-                     "Sign up"
+                     <span className="flex items-center justify-center gap-2">
+                        <span>Create Account</span>
+                        <span>→</span>
+                     </span>
                   )}
                </Button>
 
@@ -283,7 +293,7 @@ const SignUpForm = () => {
                      Sign in
                   </button>
                </div>
-            </form>
+            </div>
          </AuthLayout>
 
          {/* Toast Container */}
