@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Logo from '../../src/components/common/Logo';
+
 
 function Sidebar({ isOpen, onClose }) {
    const [activeItem, setActiveItem] = useState('Dashboard');
@@ -17,22 +19,6 @@ function Sidebar({ isOpen, onClose }) {
          icon: (
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-         )
-      },
-      {
-         name: 'Exchange',
-         icon: (
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-         )
-      },
-      {
-         name: 'Liquidity',
-         icon: (
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
          )
       }
@@ -75,12 +61,7 @@ function Sidebar({ isOpen, onClose }) {
             {/* Logo */}
             <div className="px-6 py-5 border-b border-gray-200">
                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                     <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">A</span>
-                     </div>
-                     <span className="text-xl font-bold text-gray-900">Aboki</span>
-                  </div>
+                  <Logo />
                   
                   {/* Close button for mobile */}
                   <button
@@ -140,11 +121,27 @@ function Sidebar({ isOpen, onClose }) {
    );
 }
 
-function TopNavbar({ onMenuToggle }) {
+function TopNavbar({ onMenuToggle, userData }) {
    const [testMode, setTestMode] = useState(false);
 
+   // Get user display name from API response
+   const displayName = userData?.businessName || 'User';
+   
+   // Get user initials for avatar fallback
+   const getInitials = (name) => {
+      return name
+         .split(' ')
+         .map(word => word[0])
+         .join('')
+         .toUpperCase()
+         .slice(0, 2);
+   };
+   
+   // Use logo from API if available
+   const profileImage = userData?.logo;
+
    return (
-      <header className="bg-white border-b border-gray-200 fixed top-0 left-0 lg:left-64 right-0 z-10 h-16">
+      <header className="bg-white border-b border-gray-200 fixed top-0 left-0 lg:left-64 right-0 z-10 h-18">
          <div className="h-full px-4 lg:px-6 flex items-center justify-between">
             {/* Left Side - Mobile Menu & Logo */}
             <div className="flex items-center space-x-3">
@@ -159,11 +156,8 @@ function TopNavbar({ onMenuToggle }) {
                </button>
 
                {/* Logo - Only visible on mobile */}
-               <div className="flex items-center space-x-2 lg:hidden">
-                  <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                     <span className="text-white font-bold text-lg">A</span>
-                  </div>
-                  <span className="text-xl font-bold text-gray-900">Aboki</span>
+               <div className="lg:hidden">
+                  <Logo />
                </div>
             </div>
 
@@ -194,16 +188,26 @@ function TopNavbar({ onMenuToggle }) {
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-purple-600 rounded-full"></span>
                </button>
 
-               {/* User Profile Dropdown */}
+               {/* User Profile */}
                <div className="flex items-center space-x-2 lg:space-x-3">
-                  <span className="hidden sm:block text-sm font-medium text-gray-900">Monsiplay</span>
-                  <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full overflow-hidden">
-                     <img
-                        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"
-                        alt="User avatar"
-                        className="w-full h-full object-cover"
-                     />
-                  </div>
+                  <span className="hidden sm:block text-sm font-medium text-gray-900">
+                     {displayName}
+                  </span>
+                  {profileImage ? (
+                     <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full overflow-hidden border-2 border-gray-200">
+                        <img
+                           src={profileImage}
+                           alt={`${displayName} logo`}
+                           className="w-full h-full object-cover"
+                        />
+                     </div>
+                  ) : (
+                     <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-purple-600 flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">
+                           {getInitials(displayName)}
+                        </span>
+                     </div>
+                  )}
                </div>
             </div>
          </div>
@@ -213,6 +217,43 @@ function TopNavbar({ onMenuToggle }) {
 
 export default function DashboardLayout({ children }) {
    const [sidebarOpen, setSidebarOpen] = useState(false);
+   const [userData, setUserData] = useState(null);
+   const [loading, setLoading] = useState(true);
+
+   useEffect(() => {
+      const fetchUserProfile = async () => {
+         const token = localStorage.getItem('aboki_token');
+         
+         if (!token) {
+            setLoading(false);
+            return;
+         }
+
+         try {
+            const response = await fetch('https://api.aboki.xyz/api/v1/business/profile', {
+               headers: {
+                  'accept': 'application/json',
+                  'Authorization': `Bearer ${token}`
+               }
+            });
+
+            if (response.ok) {
+               const contentType = response.headers.get("content-type");
+               
+               if (contentType && contentType.includes("application/json")) {
+                  const data = await response.json();
+                  setUserData(data);
+               }
+            }
+         } catch (error) {
+            console.error('Error fetching user profile:', error);
+         } finally {
+            setLoading(false);
+         }
+      };
+
+      fetchUserProfile();
+   }, []);
 
    const toggleSidebar = () => {
       setSidebarOpen(!sidebarOpen);
@@ -228,7 +269,7 @@ export default function DashboardLayout({ children }) {
          <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
          {/* Top Navbar */}
-         <TopNavbar onMenuToggle={toggleSidebar} />
+         <TopNavbar onMenuToggle={toggleSidebar} userData={userData} />
 
          {/* Main Content Area */}
          <main className="pt-16 lg:pl-64 min-h-screen">
