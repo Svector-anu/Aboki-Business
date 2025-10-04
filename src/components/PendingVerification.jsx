@@ -114,7 +114,7 @@ export default function PendingVerification({ profileData, errorResponse }) {
    console.log('emailVerified:', emailVerified);
 
    // Show business creation form if approved but API not enabled
-   const shouldShowBusinessForm = verificationStatus === 'approved' && !isApiEnabled && emailVerified;
+   const shouldShowBusinessForm = verificationStatus === 'approved' && emailVerified;
 
    // Show pending verification if status is pending
    const shouldShowPendingPage = verificationStatus === 'pending' && emailVerified;

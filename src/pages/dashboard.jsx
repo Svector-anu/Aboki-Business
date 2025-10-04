@@ -6,6 +6,7 @@ import DashboardLayout from "../components/DashboardLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import PendingVerification from "../components/PendingVerification";
 import VerifiedDashboard from "../components/VerifiedDashboard";
+import StatsDashboard from "../components/StatsDashboard";
 
 export default function DashboardPage() {
    const router = useRouter();
@@ -126,10 +127,57 @@ export default function DashboardPage() {
    }
 
    const responseData = errorResponse || profileData;
+   
+   // Check if this is a "no business found" error (user needs to create business)
+   const noBusinessFound = 
+      errorResponse?.message?.includes('No active business found') ||
+      errorResponse?.message?.includes('create a business first');
+
+   // Get user data from localStorage to check approval status
+   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('aboki_user') : null;
+   const userData = storedUser ? JSON.parse(storedUser) : null;
+
+   // Check verification status from either API response or localStorage
+   // Priority: API response first, then localStorage
+   const verificationStatus = responseData?.verificationStatus || userData?.verificationStatus || 'pending';
+   const isApiEnabled = responseData?.isApiEnabled !== undefined 
+      ? responseData.isApiEnabled 
+      : (userData?.isApiEnabled || false);
+   const emailVerified = responseData?.emailVerified !== undefined
+      ? responseData.emailVerified
+      : (userData?.isVerified || userData?.isEmailVerified || false);
+
+   // Check if user needs verification (pending approval)
    const needsVerification = 
-      errorResponse !== null || 
-      responseData?.verificationStatus === 'pending' ||
-      (responseData?.verificationStatus === 'approved' && !responseData?.isApiEnabled);
+      !noBusinessFound &&
+      errorResponse !== null && 
+      verificationStatus === 'pending';
+
+   // Check if user is approved but API not enabled yet (show welcome page)
+   const isApprovedButNoApi = 
+      verificationStatus === 'approved' && 
+      !isApiEnabled;
+
+   // Check if user is fully approved WITH business created - show stats dashboard
+   // ONLY show stats if business profile exists (profileData is not null and no 404 error)
+   const isFullyApproved = 
+      !noBusinessFound &&
+      profileData !== null &&
+      verificationStatus === 'approved' && 
+      isApiEnabled === true;
+
+   // If no business found but user is approved, show business creation form
+   const shouldShowBusinessForm = noBusinessFound && verificationStatus === 'approved';
+
+   console.log('=== Dashboard Display Logic ===');
+   console.log('noBusinessFound:', noBusinessFound);
+   console.log('needsVerification:', needsVerification);
+   console.log('isApprovedButNoApi:', isApprovedButNoApi);
+   console.log('isFullyApproved:', isFullyApproved);
+   console.log('shouldShowBusinessForm:', shouldShowBusinessForm);
+   console.log('verificationStatus:', verificationStatus);
+   console.log('isApiEnabled:', isApiEnabled);
+   console.log('emailVerified:', emailVerified);
 
    return (
       <>
@@ -140,7 +188,27 @@ export default function DashboardPage() {
             <link rel="icon" href="/favicon.ico" />
          </Head>
 
-         {needsVerification ? (
+         {/* CASE 1: User approved but no business - Show Business Creation Form */}
+         {shouldShowBusinessForm ? (
+            <div className="min-h-screen bg-gray-50">
+               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  <PendingVerification 
+                     profileData={{
+                        verificationStatus: verificationStatus,
+                        isApiEnabled: isApiEnabled,
+                        emailVerified: emailVerified
+                     }} 
+                     errorResponse={null}
+                  />
+               </div>
+            </div>
+         ) : noBusinessFound ? (
+            /* CASE 2: No business found and not approved - Show Welcome Page */
+            <DashboardLayout>
+               <VerifiedDashboard />
+            </DashboardLayout>
+         ) : needsVerification ? (
+            /* CASE 3: User needs verification (email or business pending approval) */
             <div className="min-h-screen bg-gray-50">
                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                   <PendingVerification 
@@ -149,7 +217,18 @@ export default function DashboardPage() {
                   />
                </div>
             </div>
+         ) : isFullyApproved ? (
+            /* CASE 4: User is fully approved with business - Show Stats Dashboard */
+            <DashboardLayout>
+               <StatsDashboard />
+            </DashboardLayout>
+         ) : isApprovedButNoApi ? (
+            /* CASE 5: User is approved but API not enabled - Show Welcome Page */
+            <DashboardLayout>
+               <VerifiedDashboard />
+            </DashboardLayout>
          ) : (
+            /* FALLBACK: Show Welcome Page */
             <DashboardLayout>
                <VerifiedDashboard />
             </DashboardLayout>

@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useAuth } from '../hooks/useAuth';
 import Logo from '../../src/components/common/Logo';
-
 
 function Sidebar({ isOpen, onClose }) {
    const [activeItem, setActiveItem] = useState('Dashboard');
+   const router = useRouter();
+   const { logout } = useAuth();
+
+   const handleLogout = () => {
+      logout();
+      router.push('/auth/signin');
+   };
 
    const menuItems = [
       {
@@ -19,6 +27,22 @@ function Sidebar({ isOpen, onClose }) {
          icon: (
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+         )
+      },
+      {
+         name: 'Onramp',
+         icon: (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+            </svg>
+         )
+      },
+      {
+         name: 'Offramp',
+         icon: (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
             </svg>
          )
       }
@@ -102,8 +126,12 @@ function Sidebar({ isOpen, onClose }) {
                   <button
                      key={item.name}
                      onClick={() => {
-                        setActiveItem(item.name);
-                        onClose();
+                        if (item.name === 'Logout') {
+                           handleLogout();
+                        } else {
+                           setActiveItem(item.name);
+                           onClose();
+                        }
                      }}
                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
                         activeItem === item.name
@@ -124,10 +152,8 @@ function Sidebar({ isOpen, onClose }) {
 function TopNavbar({ onMenuToggle, userData }) {
    const [testMode, setTestMode] = useState(false);
 
-   // Get user display name from API response
    const displayName = userData?.businessName || 'User';
    
-   // Get user initials for avatar fallback
    const getInitials = (name) => {
       return name
          .split(' ')
@@ -137,15 +163,12 @@ function TopNavbar({ onMenuToggle, userData }) {
          .slice(0, 2);
    };
    
-   // Use logo from API if available
    const profileImage = userData?.logo;
 
    return (
       <header className="bg-white border-b border-gray-200 fixed top-0 left-0 lg:left-64 right-0 z-10 h-18">
          <div className="h-full px-4 lg:px-6 flex items-center justify-between">
-            {/* Left Side - Mobile Menu & Logo */}
             <div className="flex items-center space-x-3">
-               {/* Hamburger Menu Button - Only visible on mobile */}
                <button
                   onClick={onMenuToggle}
                   className="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
@@ -155,15 +178,12 @@ function TopNavbar({ onMenuToggle, userData }) {
                   </svg>
                </button>
 
-               {/* Logo - Only visible on mobile */}
                <div className="lg:hidden">
                   <Logo />
                </div>
             </div>
 
-            {/* Right Side */}
             <div className="flex items-center space-x-3 lg:space-x-6">
-               {/* Test Mode Toggle - Hidden on mobile */}
                <div className="hidden md:flex items-center space-x-2">
                   <span className="text-sm text-gray-600">Test mode</span>
                   <button
@@ -180,7 +200,6 @@ function TopNavbar({ onMenuToggle, userData }) {
                   </button>
                </div>
 
-               {/* Notifications */}
                <button className="relative p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50 transition-colors">
                   <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -188,7 +207,6 @@ function TopNavbar({ onMenuToggle, userData }) {
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-purple-600 rounded-full"></span>
                </button>
 
-               {/* User Profile */}
                <div className="flex items-center space-x-2 lg:space-x-3">
                   <span className="hidden sm:block text-sm font-medium text-gray-900">
                      {displayName}
@@ -265,13 +283,8 @@ export default function DashboardLayout({ children }) {
 
    return (
       <div className="min-h-screen bg-gray-50">
-         {/* Sidebar */}
          <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
-
-         {/* Top Navbar */}
          <TopNavbar onMenuToggle={toggleSidebar} userData={userData} />
-
-         {/* Main Content Area */}
          <main className="pt-16 lg:pl-64 min-h-screen">
             <div className="p-4 lg:p-8">
                {children}
