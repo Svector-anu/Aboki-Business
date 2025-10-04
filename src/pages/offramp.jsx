@@ -4,9 +4,9 @@ import { useRouter } from "next/router";
 import { useAuth } from "../hooks/useAuth";
 import DashboardLayout from "../components/DashboardLayout";
 import LoadingScreen from "../components/LoadingScreen";
-import OnrampPage from "../components/OnrampPage";
+import OfframpPage from "../components/OfframpPage";
 
-export default function Onramp() {
+export default function Offramp() {
     const router = useRouter();
     const { user, loading } = useAuth();
 
@@ -20,12 +20,12 @@ export default function Onramp() {
         return (
             <>
                 <Head>
-                    <title>Onramp - Aboki</title>
-                    <meta name="description" content="Buy crypto with Nigerian Naira - Aboki" />
+                    <title>Offramp - Aboki</title>
+                    <meta name="description" content="Convert crypto to Nigerian Naira - Aboki" />
                     <meta name="viewport" content="width=device-width, initial-scale=1" />
                     <link rel="icon" href="/favicon.ico" />
                 </Head>
-                <LoadingScreen message="Loading onramp" />
+                <LoadingScreen message="Loading offramp" />
             </>
         );
     }
@@ -37,13 +37,13 @@ export default function Onramp() {
     return (
         <>
             <Head>
-                <title>Onramp - Aboki</title>
-                <meta name="description" content="Buy crypto with Nigerian Naira - Aboki" />
+                <title>Offramp - Aboki</title>
+                <meta name="description" content="Convert crypto to Nigerian Naira - Aboki" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
             <DashboardLayout>
-                <OnrampPage />
+                <OfframpPage />
             </DashboardLayout>
         </>
     );
