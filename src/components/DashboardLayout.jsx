@@ -13,6 +13,32 @@ function Sidebar({ isOpen, onClose }) {
       router.push('/auth/signin');
    };
 
+   const handleNavigation = (itemName) => {
+      setActiveItem(itemName);
+      onClose();
+      
+      // Route to different pages based on menu item
+      switch(itemName) {
+         case 'Dashboard':
+            router.push('/dashboard');
+            break;
+         case 'Transactions':
+            router.push('/transactions');
+            break;
+         case 'Onramp':
+            router.push('/onramp');
+            break;
+         case 'Offramp':
+            router.push('/offramp');
+            break;
+         case 'Settings':
+            router.push('/settings');
+            break;
+         default:
+            break;
+      }
+   };
+
    const menuItems = [
       {
          name: 'Dashboard',
@@ -104,10 +130,7 @@ function Sidebar({ isOpen, onClose }) {
                {menuItems.map((item) => (
                   <button
                      key={item.name}
-                     onClick={() => {
-                        setActiveItem(item.name);
-                        onClose();
-                     }}
+                     onClick={() => handleNavigation(item.name)}
                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
                         activeItem === item.name
                            ? 'bg-purple-600 text-white shadow-md'
@@ -129,8 +152,7 @@ function Sidebar({ isOpen, onClose }) {
                         if (item.name === 'Logout') {
                            handleLogout();
                         } else {
-                           setActiveItem(item.name);
-                           onClose();
+                           handleNavigation(item.name);
                         }
                      }}
                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
