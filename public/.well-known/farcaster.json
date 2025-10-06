@@ -1,0 +1,20 @@
+{
+  "frame": {
+    "name": "Aboki",
+    "version": "1",
+    "iconUrl": "https://app.aboki.xyz/assets/icons/logo.png",
+    "homeUrl": "https://app.aboki.xyz/dashboard",
+    "imageUrl": "https://app.aboki.xyz/assets/icons/logo.png",
+    "buttonTitle": "Open Dashboard",
+    "splashImageUrl": "https://app.aboki.xyz/assets/icons/logo.png",
+    "splashBackgroundColor": "#6366F1",
+    "subtitle": "Get Paid in NGN or USDC",
+    "description": "Accept payments in Naira or crypto for your business. Get paid in NGN, USDC, or other cryptocurrencies. Track all transactions, manage payment settings, and monitor your business performance from one simple dashboard.",
+    "primaryCategory": "finance",
+    "tags": ["usdc", "ngn", "payments", "business", "finance"],
+    "tagline": "Get paid your way",
+    "ogTitle": "Get paid your way",
+    "ogDescription": "Accept payments in Naira or crypto. Track transactions and manage your business in one dashboard.",
+    "ogImageUrl": "https://app.aboki.xyz/assets/icons/logo.png"
+  }
+}
