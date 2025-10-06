@@ -31,6 +31,15 @@ const nextConfig = {
       }
       return config;
    },
+   async redirects() {
+      return [
+         {
+            source: '/.well-known/farcaster.json',
+            destination: 'https://api.farcaster.xyz/miniapps/hosted-manifest/TEMP_ID',
+            permanent: false,
+         },
+      ];
+   },
    async headers() {
       return [
          {
@@ -38,11 +47,11 @@ const nextConfig = {
             headers: [
                {
                   key: "X-Frame-Options",
-                  value: "ALLOW-FROM https://warpcast.com", // Allow Farcaster
+                  value: "ALLOW-FROM https://warpcast.com",
                },
                {
                   key: "Content-Security-Policy",
-                  value: "frame-ancestors 'self' https://warpcast.com https://*.farcaster.xyz", // Allow Farcaster domains
+                  value: "frame-ancestors 'self' https://warpcast.com https://*.farcaster.xyz",
                },
                {
                   key: "X-Content-Type-Options",
