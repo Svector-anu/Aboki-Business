@@ -2,7 +2,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
    reactStrictMode: true,
-   // Remove this line: swcMinify: false,
    images: {
       domains: ["localhost"],
       formats: ["image/webp", "image/avif"],
@@ -39,7 +38,11 @@ const nextConfig = {
             headers: [
                {
                   key: "X-Frame-Options",
-                  value: "DENY",
+                  value: "ALLOW-FROM https://warpcast.com", // Allow Farcaster
+               },
+               {
+                  key: "Content-Security-Policy",
+                  value: "frame-ancestors 'self' https://warpcast.com https://*.farcaster.xyz", // Allow Farcaster domains
                },
                {
                   key: "X-Content-Type-Options",
