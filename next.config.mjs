@@ -31,15 +31,6 @@ const nextConfig = {
       }
       return config;
    },
-   async redirects() {
-      return [
-         {
-            source: '/.well-known/farcaster.json',
-            destination: 'https://api.farcaster.xyz/miniapps/hosted-manifest/TEMP_ID',
-            permanent: false,
-         },
-      ];
-   },
    async headers() {
       return [
          {
